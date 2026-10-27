@@ -4,6 +4,7 @@ published: 2026-10-27
 description: 这个博客的第一篇文章，顺便说说它为什么长得还不错。
 tags: [随笔, 建站]
 category: 随笔
+image: "./covers/start.png"
 draft: false
 ---
 

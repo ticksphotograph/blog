@@ -4,6 +4,7 @@ published: 2026-10-26
 description: 表格、代码块、提示框、公式、GitHub 卡片——这个主题支持的写法都在这里。
 tags: [Markdown, 写作]
 category: 指南
+image: "./covers/guide.png"
 draft: false
 ---
 

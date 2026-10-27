@@ -7,8 +7,18 @@ const { page } = Astro.props;
 
 let delay = 0;
 const interval = 50;
+
+// 只有多页时才在标题栏显示页码，避免首页出现 “第 1/1 页” 这种废话
+const pager =
+	page.lastPage > 1 ? ` · 第 ${page.currentPage} / ${page.lastPage} 页` : "";
 ---
-<div class="transition mb-4 grid grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-3 md:gap-4">
+
+<div class="mb-3 flex items-baseline justify-between px-1">
+    <h2 class="text-[1.05rem] font-bold tracking-wide text-90 md:text-lg">最新文章</h2>
+    <span class="text-xs text-50">共 {page.total} 篇{pager}</span>
+</div>
+
+<div class="transition mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
     {page.data.map((entry: CollectionEntry<"posts">) => (
         <PostCard
                 entry={entry}

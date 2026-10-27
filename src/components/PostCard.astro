@@ -5,7 +5,7 @@ import { Icon } from "astro-icon/components";
 import I18nKey from "../i18n/i18nKey";
 import { i18n } from "../i18n/translation";
 import { formatDateToYYYYMMDD } from "../utils/date-utils";
-import { getDir } from "../utils/url-utils";
+import { getDir, getCategoryUrl, getTagUrl } from "../utils/url-utils";
 import ImageWrapper from "./misc/ImageWrapper.astro";
 
 interface Props {
@@ -33,78 +33,162 @@ const {
 	style,
 } = Astro.props;
 const className = Astro.props.class;
+const tags = Astro.props.tags ?? [];
 
 const hasCover = image !== undefined && image !== null && image !== "";
 
 const { remarkPluginFrontmatter } = await entry.render();
+
+// 中文按字统计更准：remark 的 words 对中文会偏低
+const words = remarkPluginFrontmatter.words ?? 0;
+const cjk = (entry.body.match(/[㐀-鿿぀-ヿ]/g) || []).length;
+const minutes = Math.max(1, Math.round(Math.max(words, cjk) / 400));
+
+const excerpt = description || remarkPluginFrontmatter.excerpt || "";
+// 和分类重名的标签不再重复展示
+const shownTags = tags
+	.filter((t) => t.trim() !== (category || "").trim())
+	.slice(0, 3);
 ---
 
-<a
-	href={url}
+<article
 	class:list={[
-		"post-card card-base group relative flex w-full overflow-hidden rounded-[var(--radius-large)]",
+		"post-card card-base group relative w-full overflow-hidden rounded-[var(--radius-large)]",
 		className,
 	]}
 	style={style}
 >
-	{hasCover && (
-		<div class="relative hidden w-[36%] shrink-0 overflow-hidden md:block">
-			<ImageWrapper
-				src={image}
-				basePath={path.join("content/posts/", getDir(entry.id))}
-				alt=""
-				class="h-full w-full transition duration-700 group-hover:scale-[1.03]"
-			/>
+	<div class="flex items-start gap-4 p-4 md:gap-5 md:p-5">
+		<!-- 正文区 -->
+		<div class="min-w-0 flex-1">
+			<!-- meta: 分类 · 日期 · 阅读时长 -->
+			<div
+				class="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-50"
+			>
+				<a
+					href={getCategoryUrl(category)}
+					class="relative z-10 rounded-md bg-[var(--btn-plain-bg-hover)] px-2 py-0.5 font-medium text-[var(--primary)] transition hover:brightness-110"
+				>
+					{category || i18n(I18nKey.uncategorized)}
+				</a>
+				<span class="text-[var(--meta-divider)]">·</span>
+				<span class="flex items-center gap-1">
+					<Icon
+						name="material-symbols:calendar-today-outline-rounded"
+						class="text-[0.9rem]"
+					></Icon>
+					{formatDateToYYYYMMDD(published)}
+				</span>
+				<span class="text-[var(--meta-divider)]">·</span>
+				<span>{minutes} 分钟</span>
+			</div>
+
+			<!-- 标题：::after 铺满整卡，整块可点击 -->
+			<h2
+				class="mb-1.5 line-clamp-2 text-[1.1rem] font-bold leading-snug text-90 transition group-hover:text-[var(--primary)] md:text-[1.25rem]"
+			>
+				<a href={url} class="after:absolute after:inset-0">{title}</a>
+			</h2>
+
+			<!-- 摘要 -->
+			{excerpt && (
+				<p
+					class="line-clamp-2 min-h-[2.75rem] text-[0.85rem] leading-relaxed text-75"
+				>
+					{excerpt}
+				</p>
+			)}
+
+			<!-- 标签 -->
+			{shownTags.length > 0 && (
+				<div class="mt-3 flex flex-wrap items-center gap-1.5">
+					{shownTags.map((tag) => (
+						<a
+							href={getTagUrl(tag)}
+							class="relative z-10 rounded-full border border-[var(--line-divider)] px-2.5 py-0.5 text-xs text-50 transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
+						>
+							<span class="opacity-60">#</span>
+							{tag.trim()}
+						</a>
+					))}
+				</div>
+			)}
 		</div>
-	)}
 
-	<div class="flex min-w-0 flex-1 flex-col justify-center px-5 py-4 md:pr-12 md:pl-6">
-		<!-- meta: 日期 · 分类 · 字数 -->
-		<div class="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-50">
-			<span class="flex items-center gap-1">
-				<Icon name="material-symbols:calendar-today-outline-rounded" class="text-[0.9rem]"></Icon>
-				{formatDateToYYYYMMDD(published)}
-			</span>
-			<span class="h-2.5 w-px bg-[var(--line-divider)]"></span>
-			<span class="font-medium text-[var(--primary)]">{category || i18n(I18nKey.uncategorized)}</span>
-			<span class="h-2.5 w-px bg-[var(--line-divider)]"></span>
-			<span>
-				{remarkPluginFrontmatter.words}
-				{i18n(remarkPluginFrontmatter.words === 1 ? I18nKey.wordCount : I18nKey.wordsCount)}
-			</span>
+		<!-- 右侧封面缩略图 -->
+		<div
+			class="relative hidden h-20 w-28 shrink-0 overflow-hidden rounded-lg sm:block md:h-[5.5rem] md:w-32"
+		>
+			{
+				hasCover ? (
+					<ImageWrapper
+						src={image}
+						basePath={path.join("content/posts/", getDir(entry.id))}
+						alt=""
+						class="h-full w-full transition duration-700 group-hover:scale-[1.06]"
+					/>
+				) : (
+					<div
+						class="cover-fallback flex h-full w-full items-center justify-center text-2xl font-bold"
+					>
+						<span>{title.trim().charAt(0)}</span>
+					</div>
+				)
+			}
 		</div>
-
-		<!-- 标题 -->
-		<h2 class="mb-1.5 line-clamp-1 text-lg font-bold leading-snug text-90 transition group-hover:text-[var(--primary)] md:text-[1.3rem]">
-			{title}
-		</h2>
-
-		<!-- 摘要 -->
-		<p class="line-clamp-1 text-sm text-75">
-			{description || remarkPluginFrontmatter.excerpt}
-		</p>
 	</div>
 
-	<!-- hover 箭头 -->
-	<div class="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 opacity-0 transition group-hover:opacity-100 md:block">
-		<Icon name="material-symbols:chevron-right-rounded" class="text-[1.9rem] text-[var(--primary)]"></Icon>
-	</div>
-</a>
+	<!-- hover 时出现的左侧主色竖条 -->
+	<span class="post-card__bar" aria-hidden="true"></span>
+</article>
 
 <style>
 	.post-card {
+		/* 用 translate 属性而不是 transform：
+		   入场动画 keyframes 里带 transform，fill 状态会覆盖掉 hover 的 transform */
 		transition:
+			translate 0.25s ease,
 			box-shadow 0.25s ease,
-			transform 0.25s ease,
 			border-color 0.25s ease;
 	}
 
 	.post-card:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 10px 28px -18px rgb(0 0 0 / 0.28);
+		translate: 0 -2px;
+		box-shadow: 0 12px 30px -20px rgb(0 0 0 / 0.35);
 	}
 
 	:global(.dark) .post-card:hover {
-		box-shadow: 0 10px 28px -18px rgb(0 0 0 / 0.7);
+		box-shadow: 0 12px 30px -18px rgb(0 0 0 / 0.75);
+	}
+
+	.post-card__bar {
+		position: absolute;
+		left: 0;
+		top: 12%;
+		bottom: 12%;
+		width: 3px;
+		border-radius: 0 3px 3px 0;
+		background: var(--primary);
+		opacity: 0;
+		transform: scaleY(0.2);
+		transition:
+			opacity 0.25s ease,
+			transform 0.25s ease;
+		pointer-events: none;
+	}
+
+	.post-card:hover .post-card__bar {
+		opacity: 1;
+		transform: scaleY(1);
+	}
+
+	/* 无封面时的占位色块，保证列表视觉统一 */
+	.cover-fallback {
+		background: linear-gradient(
+			135deg,
+			color-mix(in oklch, var(--primary) 55%, transparent),
+			color-mix(in oklch, var(--primary) 12%, transparent)
+		);
+		color: color-mix(in oklch, var(--primary) 80%, white);
 	}
 </style>
