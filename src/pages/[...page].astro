@@ -3,7 +3,6 @@ import type { GetStaticPaths } from "astro";
 import HeroLanding from "../components/HeroLanding.astro";
 import Pagination from "../components/control/Pagination.astro";
 import PostPage from "../components/PostPage.astro";
-import Hitokoto from "../components/Hitokoto.astro";
 import { PAGE_SIZE } from "../constants/constants";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 import { getSortedPosts } from "../utils/content-utils";
@@ -23,7 +22,6 @@ const isFirstPage = page.currentPage === 1;
 <MainGridLayout>
     {isFirstPage && <HeroLanding></HeroLanding>}
     <div id="posts" class="mx-auto mt-4 w-full">
-        {isFirstPage && <Hitokoto></Hitokoto>}
         <PostPage page={page}></PostPage>
         <Pagination class="mx-auto onload-animation" page={page} style={`animation-delay: calc(var(--content-delay) + ${(len)*50}ms)`}></Pagination>
     </div>

@@ -17,17 +17,15 @@ const dividerText = "记 录 与 思 考";
 const subtitle = "用文字给想法留个底";
 const badgeText = "MY BLOG";
 
+// 首页一言：兜底文案（接口加载前/失败时显示）。实际内容由前端实时拉取 v1.hitokoto.cn 随机句覆盖。
+const quoteText = "晴天有点孤单，玩具丢在旁边，电视里没有新鲜，球鞋跑不过时间。";
+const quoteFrom = "刘北「我和你」";
+
 const posts = (await getCollection("posts")).filter((p) => !p.data.draft);
 const categories = [...new Set(posts.map((p) => p.data.category).filter(Boolean))];
 const tags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))];
 const marqueeItems = [...new Set([...categories, ...tags])].slice(0, 14);
 const marquee = [...marqueeItems, ...marqueeItems];
-
-const stats = [
-	{ value: posts.length, label: "篇文章" },
-	{ value: categories.length, label: "个分类" },
-	{ value: tags.length, label: "个标签" },
-];
 ---
 
 <section class="hero-section" aria-label={`${siteConfig.title} 首页介绍`}>
@@ -81,16 +79,12 @@ const stats = [
 				</div>
 			)}
 
-			<div class="hero-stats">
-				{stats.map((s) => (
-					<div class="stat-item">
-						<span class="stat-value">{s.value}</span>
-						<span class="stat-label">{s.label}</span>
-					</div>
-				))}
-			</div>
+		<div class="hero-quote" aria-label="首页一言">
+			<p class="hero-quote__text" data-hitokoto>{quoteText}</p>
+			<span class="hero-quote__from" data-hitokoto-from>{quoteFrom}</span>
+		</div>
 
-		<button
+	<button
 			type="button"
 			class="scroll-hint"
 				aria-label="向下浏览文章"
@@ -102,6 +96,42 @@ const stats = [
 		</div>
 	</div>
 </section>
+
+<script>
+	// 首页「一言」：每次加载时实时拉取 v1.hitokoto.cn 随机句（兜底为 SSR 文案）
+	async function loadHeroQuote() {
+		const textEl = document.querySelector("[data-hitokoto]");
+		if (!textEl) return;
+		const fromEl = document.querySelector("[data-hitokoto-from]");
+		try {
+			const ctrl = new AbortController();
+			const timer = setTimeout(() => ctrl.abort(), 4000);
+			const res = await fetch("https://v1.hitokoto.cn/?max_length=40", { signal: ctrl.signal });
+			clearTimeout(timer);
+			if (!res.ok) return;
+			const data = await res.json();
+			const sentence = (data.hitokoto || "").trim();
+			if (!sentence) return;
+			const from = [data.from, data.from_who].filter(Boolean).join(" · ");
+			textEl.style.opacity = "0";
+			if (fromEl) fromEl.style.opacity = "0";
+			setTimeout(() => {
+				textEl.textContent = sentence;
+				if (fromEl) fromEl.textContent = from;
+				textEl.style.opacity = "";
+				if (fromEl) fromEl.style.opacity = "";
+			}, 260);
+		} catch (e) {
+			/* 失败则保留兜底文案 */
+		}
+	}
+	window.loadHeroQuote = loadHeroQuote;
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", loadHeroQuote);
+	} else {
+		loadHeroQuote();
+	}
+</script>
 
 <style>
 	/* 得意黑 Smiley Sans（SIL OFL 1.1，可商用）—— 带倾斜角度的潮流字形 */
@@ -508,16 +538,40 @@ const stats = [
 		opacity: 0.7;
 	}
 
-	.hero-stats {
-		display: flex;
-		align-items: center;
-		gap: 2rem;
-		padding: 0.85rem 1.75rem;
-		border-radius: 0.5rem;
-		border: 1px solid var(--h-line);
-		background: color-mix(in oklch, var(--card-bg) 55%, transparent);
-		backdrop-filter: blur(12px);
+	/* 首页一言：安静的引用，作为整屏收尾的氛围句 */
+	.hero-quote {
+		margin-top: 0.9rem;
+		margin-bottom: 0.2rem;
+		max-width: 30rem;
+		text-align: center;
 		animation: fadeUp 1s ease-out 1.05s both;
+	}
+
+	.hero-quote__text {
+		margin: 0;
+		font-size: clamp(0.82rem, 1.6vw, 0.98rem);
+		line-height: 1.7;
+		color: var(--h-meta);
+		opacity: 0.92;
+		transition: opacity 0.45s ease;
+	}
+
+	.hero-quote__text::before {
+		content: "“";
+		color: var(--primary);
+		opacity: 0.6;
+		font-weight: 700;
+		margin-right: 0.12em;
+	}
+
+	.hero-quote__from {
+		display: block;
+		margin-top: 0.4rem;
+		font-size: 0.72rem;
+		letter-spacing: 0.12em;
+		color: var(--h-meta);
+		opacity: 0.7;
+		transition: opacity 0.45s ease;
 	}
 
 	@keyframes fadeUp {
@@ -529,26 +583,6 @@ const stats = [
 			opacity: 1;
 			transform: translateY(0);
 		}
-	}
-
-	.stat-item {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.1rem;
-	}
-
-	.stat-value {
-		font-size: 1.15rem;
-		font-weight: 700;
-		color: var(--primary);
-		line-height: 1;
-	}
-
-	.stat-label {
-		font-size: 0.7rem;
-		color: var(--h-meta);
-		opacity: 0.85;
 	}
 
 	.scroll-hint {
@@ -614,9 +648,12 @@ const stats = [
 			right: 4%;
 			top: 14%;
 		}
-		.hero-stats {
-			gap: 1.25rem;
-			padding: 0.75rem 1.25rem;
+		.hero-quote {
+			margin-top: 0.7rem;
+		}
+		.hero-quote__text {
+			font-size: 0.8rem;
+			line-height: 1.6;
 		}
 	}
 

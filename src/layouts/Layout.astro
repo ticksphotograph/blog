@@ -648,18 +648,12 @@ if (document.body.classList.contains("home-wide")) {
 
 if (window.swup) {
 	window.swup.hooks.on("page:view", syncLayout)
-	// 回首页时刷新「一言」随机句并重新触发淡入（仅在首页存在 .hitokoto 时生效）
-	window.swup.hooks.on("page:view", () => {
-		window.loadHitokoto?.()
-		window.revealHitokoto?.()
-	})
+	// 回首页时刷新「一言」随机句（仅在首页存在 data-hitokoto 时生效）
+	window.swup.hooks.on("page:view", () => window.loadHeroQuote?.())
 } else {
 	document.addEventListener("swup:enable", () => {
 		window.swup.hooks.on("page:view", syncLayout)
-		window.swup.hooks.on("page:view", () => {
-			window.loadHitokoto?.()
-			window.revealHitokoto?.()
-		})
+		window.swup.hooks.on("page:view", () => window.loadHeroQuote?.())
 	})
 }
 </script>
