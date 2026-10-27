@@ -28,17 +28,19 @@ $ pnpm dev
 ### 2. `astro.config.mjs` —— 站点地址
 
 ```js
-site: "https://yourname.github.io/",
+site: process.env.BLOG_SITE || "https://yourname.github.io",
+base: process.env.BLOG_BASE || "/",
 ```
 
-`yourname` 换成你的 GitHub 用户名。
-
-> 如果仓库名**不是** `yourname.github.io`（比如叫 `blog`），地址要写成
-> `https://yourname.github.io/blog/`，并同时加上 `base: "/blog"`，否则样式和图片会 404。
+- 本地预览保持根路径（`base: "/"`），无需改动。
+- 部署到 **项目仓库**（仓库名 `blog`）时，由 `.github/workflows/deploy.yml` 自动注入
+  `BLOG_BASE=/blog`、`BLOG_SITE=https://yourname.github.io`，构建出的资源路径才会是 `/blog/...`，否则线上样式/图片会 404。
+- 若你想把地址写死（不用环境变量），把 `yourname` 换成用户名、`base` 改成 `/blog` 即可。
 
 ### 3. `.github/workflows/deploy.yml`
 
-默认不用改。它会在你 push 到 `main` 时自动构建并发布。
+默认不用改。它会在你 push 到 `main` 时自动构建并发布；构建步骤已注入
+`BLOG_BASE=/blog` 与 `BLOG_SITE=https://ticksphotograph.github.io`，对应仓库名 `blog`。
 
 ## 发布到 GitHub Pages
 
@@ -47,13 +49,13 @@ $ git init
 $ git add .
 $ git commit -m "init blog"
 $ git branch -M main
-$ git remote add origin https://github.com/yourname/yourname.github.io.git
+$ git remote add origin https://github.com/yourname/blog.git
 $ git push -u origin main
 ```
 
 然后去仓库的 **Settings → Pages**，把 **Source** 选为 **GitHub Actions**（不是 Deploy from a branch）。
 
-返回 **Actions** 标签页，等 `Deploy to GitHub Pages` 跑完，访问 `https://yourname.github.io/` 即可。
+返回 **Actions** 标签页，等 `Deploy to GitHub Pages` 跑完，访问 `https://yourname.github.io/blog/` 即可。
 
 ## 写文章
 
@@ -106,7 +108,7 @@ $ pnpm dev
    （这个目录已经是 git 仓库，有首次提交，会自动识别）
 3. **File → Options → Accounts** 登录 GitHub（走浏览器授权，不需要 token）
 4. 右上角点 **Push origin**
-   - 如果报仓库不存在，先去 https://github.com/new 建一个名为 `ticksphotograph.github.io` 的**空**仓库（不要勾 README），再回来点 Push
+   - 如果报仓库不存在，先去 https://github.com/new 建一个名为 `blog` 的**空**仓库（不要勾 README），再回来点 Push
 5. 推完去仓库 **Settings → Pages**，Source 选 **GitHub Actions**
 
 之后每次更新文章：

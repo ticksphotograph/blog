@@ -25,9 +25,12 @@ import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
 import { pluginCustomCopyButton } from "./src/plugins/expressive-code/custom-copy-button.js";
 
 // https://astro.build/config
+// base / site 支持用环境变量覆盖：
+//   本地预览（Docker / dev）保持根路径；
+//   GitHub Pages 项目站（仓库名 blog）由 CI 注入 BLOG_BASE=/blog、BLOG_SITE=https://ticksphotograph.github.io
 export default defineConfig({
-	site: "https://ticksphotograph.github.io/",
-	base: "/",
+	site: process.env.BLOG_SITE || "https://ticksphotograph.github.io",
+	base: process.env.BLOG_BASE || "/",
 	trailingSlash: "always",
 	integrations: [
 		tailwind({

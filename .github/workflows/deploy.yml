@@ -36,6 +36,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
+        env:
+          BLOG_BASE: /blog
+          BLOG_SITE: https://ticksphotograph.github.io
         run: pnpm build
 
       - name: Configure Pages
