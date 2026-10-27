@@ -210,6 +210,13 @@ const bannerOffset =
 	.home-wide #swup-container {
 		overflow: visible;
 	}
+	/* 首页导航透明→白：加长过渡，切换更顺滑 */
+	.home-wide #navbar .card-base {
+		transition:
+			background-color 0.35s ease,
+			box-shadow 0.35s ease,
+			backdrop-filter 0.35s ease;
+	}
 	.home-wide:not(.nav-scrolled) #navbar .card-base {
 		background: transparent !important;
 	}
