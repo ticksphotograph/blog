@@ -1,0 +1,622 @@
+---
+import { getCollection } from "astro:content";
+import { siteConfig } from "../config";
+
+/**
+ * 首页 Hero 动画
+ * 想改文案就改下面这几行，改完不用动样式。
+ */
+const titleWords = [
+	{ text: "探索" },
+	{ text: "代码", accent: true },
+	{ text: "的" },
+	{ text: "无限", highlight: true },
+	{ text: "可能" },
+];
+const dividerText = "记 录 与 思 考";
+const subtitle = "用文字给想法留个底";
+const badgeText = "MY BLOG";
+
+const posts = (await getCollection("posts")).filter((p) => !p.data.draft);
+const categories = [...new Set(posts.map((p) => p.data.category).filter(Boolean))];
+const tags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))];
+const marqueeItems = [...new Set([...categories, ...tags])].slice(0, 14);
+const marquee = [...marqueeItems, ...marqueeItems];
+
+const stats = [
+	{ value: posts.length, label: "篇文章" },
+	{ value: categories.length, label: "个分类" },
+	{ value: tags.length, label: "个标签" },
+];
+---
+
+<section class="hero-section" aria-label={`${siteConfig.title} 首页介绍`}>
+	<div class="hero">
+		<div class="hero-bg" aria-hidden="true">
+			<div class="shape shape-1"></div>
+			<div class="shape shape-2"></div>
+			<div class="shape shape-3"></div>
+			<div class="shape shape-4"></div>
+			<div class="scan-line"></div>
+			<div class="grain"></div>
+			<div class="fade-bottom"></div>
+		</div>
+
+		<div class="hero-content">
+			<div class="hero-badge">
+				<span class="badge-dot"></span>
+				<span class="badge-text">{badgeText}</span>
+				<span class="badge-dot"></span>
+			</div>
+
+			<h1 class="hero-title">
+				<span class="title-line line-1">
+					{titleWords.map((w, i) => (
+						<span
+							class:list={["word", { accent: w.accent, highlight: w.highlight }]}
+							style={`animation-delay:${0.18 + i * 0.08}s`}
+						>{w.text}</span>
+					))}
+				</span>
+				<span class="title-divider">
+					<span class="divider-line"></span>
+					<span class="divider-text">{dividerText}</span>
+					<span class="divider-line"></span>
+				</span>
+				<span class="title-line line-3">
+					<span class="word" style="animation-delay:0.75s">{subtitle}</span>
+				</span>
+			</h1>
+
+			{marquee.length > 0 && (
+				<div class="hero-tags">
+					<div class="tags-track">
+						{marquee.map((t) => (
+							<span class="hero-tag">
+								<span class="tag-hash">#</span>
+								<span class="tag-name">{t}</span>
+							</span>
+						))}
+					</div>
+				</div>
+			)}
+
+			<div class="hero-stats">
+				{stats.map((s) => (
+					<div class="stat-item">
+						<span class="stat-value">{s.value}</span>
+						<span class="stat-label">{s.label}</span>
+					</div>
+				))}
+			</div>
+
+			<button
+				type="button"
+				class="scroll-hint"
+				aria-label="向下浏览文章"
+				onclick="document.getElementById('posts')?.scrollIntoView({behavior:'smooth',block:'start'})"
+			>
+				<span class="scroll-hint__label">向下浏览</span>
+				<span class="scroll-hint__line"></span>
+			</button>
+		</div>
+	</div>
+</section>
+
+<style>
+	/* 得意黑 Smiley Sans（SIL OFL 1.1，可商用）—— 带倾斜角度的潮流字形 */
+	@font-face {
+		font-family: "Smiley Sans";
+		src: url("/fonts/smiley-sans.woff2") format("woff2");
+		font-weight: 400;
+		font-style: normal;
+		font-display: swap;
+	}
+
+	.hero-section {
+		margin-bottom: 1rem;
+		/* 突破页面留白，左右贴到屏幕边缘；负 top 让 hero 顶到视口顶部，被透明导航栏覆盖 */
+		margin-left: calc(50% - 50vw);
+		margin-right: calc(50% - 50vw);
+		margin-top: -5.5rem;
+	}
+
+	.hero {
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 100vh;
+		min-height: 100svh;
+		padding: calc(5.5rem + 1.5rem) 1.5rem 5rem;
+		background: var(--card-bg);
+		--h-text: rgba(0, 0, 0, 0.92);
+		--h-meta: rgba(0, 0, 0, 0.6);
+		--h-line: rgba(0, 0, 0, 0.1);
+	}
+
+	:global(.dark) .hero {
+		--h-text: rgba(255, 255, 255, 0.94);
+		--h-meta: rgba(255, 255, 255, 0.66);
+		--h-line: rgba(255, 255, 255, 0.14);
+	}
+
+	.hero::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		pointer-events: none;
+		background: radial-gradient(
+			58% 52% at 50% 40%,
+			color-mix(in oklch, var(--primary) 10%, transparent),
+			transparent 72%
+		);
+	}
+
+	.hero-bg {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		pointer-events: none;
+	}
+
+	.shape {
+		position: absolute;
+		border: 1.5px solid color-mix(in oklch, var(--primary) 30%, transparent);
+		background: color-mix(in oklch, var(--primary) 4%, transparent);
+		animation: float 22s ease-in-out infinite;
+	}
+
+	.shape::before {
+		content: "";
+		position: absolute;
+		inset: 6px;
+		border: 1px solid color-mix(in oklch, var(--primary) 14%, transparent);
+		border-radius: inherit;
+	}
+
+	/* 只留两个小装饰，桌面端和手机一致；想更热闹就删掉下面这两行 */
+	.shape-1,
+	.shape-2 {
+		display: none;
+	}
+
+	.shape-1 {
+		width: 16rem;
+		height: 16rem;
+		left: -3rem;
+		top: -2rem;
+		border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+	}
+
+	.shape-2 {
+		width: 12rem;
+		height: 12rem;
+		right: -2rem;
+		top: 35%;
+		border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+		animation-delay: -6s;
+	}
+
+	.shape-3 {
+		width: 12rem;
+		height: 12rem;
+		left: 2%;
+		bottom: -6rem;
+		border-radius: 40% 60% 60% 40% / 60% 40% 40% 60%;
+		animation-delay: -12s;
+	}
+
+	.shape-4 {
+		width: 11rem;
+		height: 11rem;
+		right: 7%;
+		top: 13%;
+		border-radius: 50%;
+		animation-delay: -18s;
+	}
+
+	@keyframes float {
+		0%,
+		100% {
+			transform: translate(0, 0) rotate(0deg);
+		}
+		25% {
+			transform: translate(18px, -18px) rotate(90deg);
+		}
+		50% {
+			transform: translate(-12px, 14px) rotate(180deg);
+		}
+		75% {
+			transform: translate(22px, 8px) rotate(270deg);
+		}
+	}
+
+	.scan-line {
+		position: absolute;
+		left: 0;
+		right: 0;
+		height: 2px;
+		top: 0;
+		background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--primary) 55%, transparent), transparent);
+		animation: scan 6s linear infinite;
+	}
+
+	@keyframes scan {
+		0% {
+			top: 0;
+			opacity: 0;
+		}
+		10% {
+			opacity: 0.7;
+		}
+		90% {
+			opacity: 0.7;
+		}
+		100% {
+			top: 100%;
+			opacity: 0;
+		}
+	}
+
+	.grain {
+		position: absolute;
+		inset: 0;
+		opacity: 0.18;
+		mix-blend-mode: overlay;
+		background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='a'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='4' stitchTiles='stitch' type='fractalNoise'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23a)'/%3E%3C/svg%3E");
+	}
+
+	.fade-bottom {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 7rem;
+		background: linear-gradient(to bottom, transparent, var(--card-bg));
+	}
+
+	.hero-content {
+		position: relative;
+		z-index: 2;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		width: 100%;
+		max-width: 100%;
+		min-width: 0;
+	}
+
+	.hero-badge {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.4rem 1.1rem;
+		margin-bottom: 2rem;
+		border-radius: 999px;
+		border: 1px solid color-mix(in oklch, var(--primary) 25%, transparent);
+		background: color-mix(in oklch, var(--card-bg) 80%, transparent);
+		backdrop-filter: blur(10px);
+		animation: badgeIn 0.8s ease-out both;
+	}
+
+	@keyframes badgeIn {
+		from {
+			opacity: 0;
+			transform: translateY(-14px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.badge-dot {
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--primary);
+		animation: pulse 2s ease-in-out infinite;
+	}
+
+	@keyframes pulse {
+		0%,
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+		50% {
+			opacity: 0.45;
+			transform: scale(1.6);
+		}
+	}
+
+	.badge-text {
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.3em;
+		color: var(--h-meta);
+	}
+
+	.hero-title {
+		margin: 0 0 1.75rem;
+		font-weight: 800;
+		line-height: 1.15;
+		color: var(--h-text);
+		perspective: 800px;
+	}
+
+	.title-line {
+		display: block;
+	}
+
+	.line-1 {
+		display: block;
+		font-family: "Smiley Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+		font-size: clamp(1.7rem, 9.2vw, 7.2rem);
+		font-weight: 400;
+		font-style: normal;
+		letter-spacing: 0.02em;
+		white-space: nowrap;
+	}
+
+	.word {
+		display: inline-block;
+		animation: wordIn 0.7s cubic-bezier(0.22, 0.85, 0.25, 1) both;
+	}
+
+	@keyframes wordIn {
+		from {
+			opacity: 0;
+			transform: translateY(38px) rotateX(-22deg);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0) rotateX(0deg);
+		}
+	}
+
+	.word.accent {
+		color: var(--primary);
+		transform: skew(-6deg);
+	}
+
+	.word.highlight {
+		position: relative;
+	}
+
+	.word.highlight::after {
+		content: "";
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: -0.05em;
+		height: 0.09em;
+		border-radius: 2px;
+		background: color-mix(in oklch, var(--primary) 62%, transparent);
+		transform: skewX(-11deg) scaleX(0);
+		transform-origin: left;
+		animation: highlightIn 0.8s ease-out 0.9s forwards;
+	}
+
+	@keyframes highlightIn {
+		to {
+			transform: skewX(-11deg) scaleX(1);
+		}
+	}
+
+	.title-divider {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin: 1.6rem 0 1.1rem;
+		animation: dividerIn 1s ease-out 0.55s both;
+	}
+
+	@keyframes dividerIn {
+		from {
+			opacity: 0;
+			transform: scaleX(0.4);
+		}
+		to {
+			opacity: 1;
+			transform: scaleX(1);
+		}
+	}
+
+	.divider-line {
+		height: 1px;
+		width: 4.5rem;
+		background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--primary) 55%, transparent), transparent);
+	}
+
+	.divider-text {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.3em;
+		color: var(--h-meta);
+		opacity: 0.85;
+		white-space: nowrap;
+	}
+
+	.line-3 {
+		font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+		font-weight: 400;
+		letter-spacing: 0.12em;
+		color: var(--h-meta);
+		opacity: 0.9;
+	}
+
+	.hero-tags {
+		width: 100%;
+		max-width: 40rem;
+		min-width: 0;
+		overflow: hidden;
+		margin-bottom: 1.5rem;
+		mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+		-webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+		animation: fadeUp 1s ease-out 0.9s both;
+	}
+
+	.tags-track {
+		display: flex;
+		gap: 0.6rem;
+		width: fit-content;
+		animation: marquee 32s linear infinite;
+	}
+
+	.hero-tags:hover .tags-track {
+		animation-play-state: paused;
+	}
+
+	@keyframes marquee {
+		from {
+			transform: translateX(0);
+		}
+		to {
+			transform: translateX(-50%);
+		}
+	}
+
+	.hero-tag {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.45rem 0.9rem;
+		white-space: nowrap;
+		font-size: 0.8rem;
+		border-radius: 0.5rem;
+		border: 1px solid var(--h-line);
+		background: color-mix(in oklch, var(--card-bg) 72%, transparent);
+		color: var(--h-meta);
+	}
+
+	.tag-hash {
+		color: var(--primary);
+		font-weight: 700;
+		opacity: 0.7;
+	}
+
+	.hero-stats {
+		display: flex;
+		align-items: center;
+		gap: 2rem;
+		padding: 0.85rem 1.75rem;
+		border-radius: 0.5rem;
+		border: 1px solid var(--h-line);
+		background: color-mix(in oklch, var(--card-bg) 55%, transparent);
+		backdrop-filter: blur(12px);
+		animation: fadeUp 1s ease-out 1.05s both;
+	}
+
+	@keyframes fadeUp {
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.stat-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.1rem;
+	}
+
+	.stat-value {
+		font-size: 1.15rem;
+		font-weight: 700;
+		color: var(--primary);
+		line-height: 1;
+	}
+
+	.stat-label {
+		font-size: 0.7rem;
+		color: var(--h-meta);
+		opacity: 0.85;
+	}
+
+	.scroll-hint {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.55rem;
+		margin-top: 2.5rem;
+		padding: 0;
+		background: none;
+		border: 0;
+		cursor: pointer;
+		color: var(--h-meta);
+		animation: fadeUp 1s ease-out 1.25s both;
+		transition: opacity 0.3s ease;
+	}
+
+	.scroll-hint:hover {
+		opacity: 0.75;
+	}
+
+	.scroll-hint__label {
+		font-size: 0.68rem;
+		letter-spacing: 0.28em;
+		opacity: 0.65;
+	}
+
+	.scroll-hint__line {
+		width: 1px;
+		height: 2.4rem;
+		background: linear-gradient(to bottom, color-mix(in oklch, var(--primary) 80%, transparent), transparent);
+		transform-origin: top;
+		animation: hintPulse 2.2s ease-in-out infinite;
+	}
+
+	@keyframes hintPulse {
+		0%,
+		100% {
+			opacity: 0.35;
+			transform: scaleY(0.55);
+		}
+		50% {
+			opacity: 1;
+			transform: scaleY(1);
+		}
+	}
+
+	@media (max-width: 767px) {
+		.hero {
+			padding: calc(5.5rem + 1rem) 1rem 4.5rem;
+		}
+		.shape-3 {
+			width: 10rem;
+			height: 10rem;
+			left: 2%;
+		}
+		.shape-4 {
+			width: 7rem;
+			height: 7rem;
+			right: 4%;
+			top: 14%;
+		}
+		.hero-stats {
+			gap: 1.25rem;
+			padding: 0.75rem 1.25rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.shape,
+		.scan-line,
+		.tags-track,
+		.badge-dot {
+			animation: none;
+		}
+	}
+</style>
