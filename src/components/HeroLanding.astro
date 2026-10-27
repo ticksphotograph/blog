@@ -131,6 +131,52 @@ const marquee = [...marqueeItems, ...marqueeItems];
 	} else {
 		loadHeroQuote();
 	}
+
+	// —— hero 滚动视差 + 离场淡出 ——
+	(function heroScrollFX() {
+		const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const hero = document.querySelector(".hero");
+		if (!hero) return;
+		const content = hero.querySelector(".hero-content");
+		const bg = hero.querySelector(".hero-bg");
+
+		function apply() {
+			const y = window.scrollY || window.pageYOffset || 0;
+			const h = hero.offsetHeight || 1;
+			const p = Math.min(Math.max(y / h, 0), 1);
+			// 背景装饰层以较慢速率随滚动下移，形成视差景深
+			if (bg) bg.style.transform = `translate3d(0, ${(y * 0.3).toFixed(1)}px, 0)`;
+			// 内容层轻微上移并随离开进度淡出
+			if (content) {
+				content.style.setProperty("--hero-shift", `${(-y * 0.16).toFixed(1)}px`);
+				content.style.setProperty("--hero-opacity", (1 - p * 0.86).toFixed(3));
+			}
+		}
+
+		if (!reduce) {
+			let ticking = false;
+			function onScroll() {
+				if (ticking) return;
+				ticking = true;
+				requestAnimationFrame(() => {
+					apply();
+					if ((window.scrollY || 0) > 8) hero.classList.remove("hero-leaving");
+					ticking = false;
+				});
+			}
+			window.addEventListener("scroll", onScroll, { passive: true });
+			apply();
+		}
+
+		// 点击“向下浏览”：先触发电影感退场，再平滑滚动到文章区
+		const hint = hero.querySelector(".scroll-hint");
+		hint?.addEventListener("click", () => {
+			if (reduce) return;
+			hero.classList.add("hero-leaving");
+			const posts = document.getElementById("posts");
+			if (posts) posts.scrollIntoView({ behavior: "smooth", block: "start" });
+		});
+	})();
 </script>
 
 <style>
@@ -174,9 +220,39 @@ const marquee = [...marqueeItems, ...marqueeItems];
 	}
 
 	:global(.dark) .hero {
-		--h-text: rgba(255, 255, 255, 0.94);
-		--h-meta: rgba(255, 255, 255, 0.66);
-		--h-line: rgba(255, 255, 255, 0.14);
+		--h-text: rgba(255, 255, 255, 0.95);
+		--h-meta: rgba(255, 255, 255, 0.7);
+		--h-line: rgba(255, 255, 255, 0.16);
+		/* 深色模式：顶部加一层主色光晕，层次更丰富 */
+		background:
+			radial-gradient(120% 85% at 50% -12%, color-mix(in oklch, var(--primary) 16%, transparent), transparent 60%),
+			linear-gradient(180deg, var(--card-bg) 0%, var(--card-bg) 55%, var(--page-bg) 100%);
+	}
+
+	:global(.dark) .hero::before {
+		background: radial-gradient(62% 56% at 50% 38%, color-mix(in oklch, var(--primary) 20%, transparent), transparent 70%);
+	}
+
+	:global(.dark) .shape {
+		border-color: color-mix(in oklch, var(--primary) 46%, transparent);
+		background: color-mix(in oklch, var(--primary) 9%, transparent);
+	}
+
+	:global(.dark) .shape::before {
+		border-color: color-mix(in oklch, var(--primary) 22%, transparent);
+	}
+
+	:global(.dark) .hero-quote__text {
+		opacity: 1;
+	}
+
+	:global(.dark) .hero-quote__from {
+		opacity: 0.85;
+	}
+
+	:global(.dark) .hero-tags {
+		-webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+		mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
 	}
 
 	.hero::before {
@@ -325,6 +401,18 @@ const marquee = [...marqueeItems, ...marqueeItems];
 		width: 100%;
 		max-width: 100%;
 		min-width: 0;
+		/* 滚动驱动的淡出/位移（由 JS 设置 --hero-opacity / --hero-shift） */
+		opacity: var(--hero-opacity, 1);
+		transform: translateY(var(--hero-shift, 0px));
+		will-change: opacity, transform;
+		transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+	}
+
+	/* 点击“向下浏览”时的电影感退场 */
+	.hero-leaving .hero-content {
+		--hero-opacity: 0;
+		--hero-shift: -28px;
+		transition: opacity 0.6s ease, transform 0.6s ease;
 	}
 
 	.hero-badge {
