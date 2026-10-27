@@ -216,6 +216,28 @@ const bannerOffset =
 	.home-wide:not(.nav-scrolled) #navbar > div.absolute {
 		background: transparent !important;
 	}
+
+	/* 首页铺满首屏：内容列至少占满一屏，Hero 吸收多余高度，避免底部留白 */
+	.home-wide #content-wrapper {
+		display: flex;
+		flex-direction: column;
+		min-height: calc(100svh - 5.5rem);
+	}
+	.home-wide .hero-section {
+		flex: 1 1 auto;
+		display: flex;
+		flex-direction: column;
+	}
+	.home-wide .hero {
+		/* 首屏整屏展示 Hero，不参与拉伸 */
+		flex: 0 0 auto;
+	}
+	.home-wide #posts {
+		flex: 0 0 auto;
+	}
+	.home-wide #content-wrapper > .footer {
+		margin-top: auto;
+	}
 }
 </style>
 

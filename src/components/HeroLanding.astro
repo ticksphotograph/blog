@@ -128,10 +128,16 @@ const stats = [
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-height: 55vh;
-		min-height: 55svh;
-		padding: 5.5rem 1.5rem 1.5rem;
-		background: var(--card-bg);
+		/* 首屏整屏：hero 独占一屏，文章列表往下滚才出现 */
+		min-height: 100vh;
+		min-height: 100svh;
+		padding: calc(5.5rem + 1rem) 1.5rem 2.5rem;
+		background: linear-gradient(
+			180deg,
+			var(--card-bg) 0%,
+			var(--card-bg) 55%,
+			var(--page-bg) 100%
+		);
 		--h-text: rgba(0, 0, 0, 0.92);
 		--h-meta: rgba(0, 0, 0, 0.6);
 		--h-line: rgba(0, 0, 0, 0.1);
@@ -296,7 +302,7 @@ const stats = [
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.4rem 1.1rem;
-		margin-bottom: 0.9rem;
+		margin-bottom: 1.2rem;
 		border-radius: 999px;
 		border: 1px solid color-mix(in oklch, var(--primary) 25%, transparent);
 		background: color-mix(in oklch, var(--card-bg) 80%, transparent);
@@ -343,7 +349,7 @@ const stats = [
 	}
 
 	.hero-title {
-		margin: 0 0 0.9rem;
+		margin: 0 0 1rem;
 		font-weight: 800;
 		line-height: 1.15;
 		color: var(--h-text);
@@ -357,7 +363,7 @@ const stats = [
 	.line-1 {
 		display: block;
 		font-family: "Smiley Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
-		font-size: clamp(1.5rem, 6.8vw, 4.9rem);
+		font-size: clamp(1.6rem, 7.4vw, 5.6rem);
 		font-weight: 400;
 		font-style: normal;
 		letter-spacing: 0.02em;
@@ -414,7 +420,7 @@ const stats = [
 		align-items: center;
 		justify-content: center;
 		gap: 1rem;
-		margin: 1rem 0 0.6rem;
+		margin: 1.25rem 0 0.8rem;
 		animation: dividerIn 1s ease-out 0.55s both;
 	}
 
@@ -457,7 +463,7 @@ const stats = [
 		max-width: 40rem;
 		min-width: 0;
 		overflow: hidden;
-		margin-bottom: 0.9rem;
+		margin-bottom: 1.2rem;
 		mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
 		-webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
 		animation: fadeUp 1s ease-out 0.9s both;
@@ -550,7 +556,7 @@ const stats = [
 		flex-direction: column;
 		align-items: center;
 		gap: 0.55rem;
-		margin-top: 0.9rem;
+		margin-top: 1.2rem;
 		padding: 0;
 		background: none;
 		border: 0;
@@ -595,7 +601,7 @@ const stats = [
 			padding: calc(5.5rem + 0.5rem) 1rem 2rem;
 		}
 		.line-1 {
-			font-size: clamp(1.5rem, 8.6vw, 4.9rem);
+			font-size: clamp(1.6rem, 8.8vw, 5.6rem);
 		}
 		.shape-3 {
 			width: 10rem;
