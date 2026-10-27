@@ -1,0 +1,159 @@
+---
+// 首页「一言」：放在文章列表上方，作为 hero 整屏到内容的过渡句。
+// 内容由前端实时拉取 v1.hitokoto.cn 随机句（限长 40，接口失败/超时保留兜底句）。
+const fallbackText = "晴天有点孤单，玩具丢在旁边，电视里没有新鲜，球鞋跑不过时间。";
+const fallbackFrom = "刘北「我和你」";
+---
+
+<div class="hitokoto" aria-label="一言">
+	<span class="hitokoto__rule" aria-hidden="true"></span>
+	<span class="hitokoto__eyebrow">一 言</span>
+	<p class="hitokoto__text" data-hitokoto>{fallbackText}</p>
+	<span class="hitokoto__from" data-hitokoto-from>{fallbackFrom}</span>
+</div>
+
+<style>
+	.hitokoto {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: 0.5rem;
+		max-width: 42rem;
+		margin: 0 auto 2.25rem;
+		padding: 0 1rem;
+		opacity: 0;
+		transform: translateY(16px);
+		transition:
+			opacity 0.7s ease,
+			transform 0.7s ease;
+	}
+
+	.hitokoto.in-view {
+		opacity: 1;
+		transform: none;
+	}
+
+	.hitokoto__rule {
+		width: 3.5rem;
+		height: 1px;
+		margin-bottom: 0.4rem;
+		background: linear-gradient(
+			90deg,
+			transparent,
+			color-mix(in oklch, var(--primary) 55%, transparent),
+			transparent
+		);
+	}
+
+	.hitokoto__eyebrow {
+		font-size: 0.7rem;
+		letter-spacing: 0.4em;
+		font-weight: 700;
+		color: var(--primary);
+		opacity: 0.85;
+	}
+
+	.hitokoto__text {
+		margin: 0;
+		font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+		line-height: 1.8;
+		color: rgba(0, 0, 0, 0.78);
+		transition: opacity 0.45s ease;
+	}
+
+	.hitokoto__text::before {
+		content: "“";
+		color: var(--primary);
+		opacity: 0.6;
+		font-weight: 700;
+		margin-right: 0.14em;
+	}
+
+	.hitokoto__from {
+		font-size: 0.75rem;
+		letter-spacing: 0.12em;
+		color: rgba(0, 0, 0, 0.5);
+	}
+
+	:global(.dark) .hitokoto__text {
+		color: rgba(255, 255, 255, 0.82);
+	}
+
+	:global(.dark) .hitokoto__from {
+		color: rgba(255, 255, 255, 0.6);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hitokoto {
+			opacity: 1;
+			transform: none;
+			transition: none;
+		}
+	}
+</style>
+
+<script>
+	// 实时拉取 v1.hitokoto.cn 随机句（限长 40，4s 超时，失败保留兜底文案）
+	async function loadHitokoto() {
+		const textEl = document.querySelector("[data-hitokoto]");
+		if (!textEl) return;
+		const fromEl = document.querySelector("[data-hitokoto-from]");
+		try {
+			const ctrl = new AbortController();
+			const timer = setTimeout(() => ctrl.abort(), 4000);
+			const res = await fetch("https://v1.hitokoto.cn/?max_length=40", { signal: ctrl.signal });
+			clearTimeout(timer);
+			if (!res.ok) return;
+			const data = await res.json();
+			const sentence = (data.hitokoto || "").trim();
+			if (!sentence) return;
+			const from = [data.from, data.from_who].filter(Boolean).join(" · ");
+			textEl.style.opacity = "0";
+			if (fromEl) fromEl.style.opacity = "0";
+			setTimeout(() => {
+				textEl.textContent = sentence;
+				if (fromEl) fromEl.textContent = from;
+				textEl.style.opacity = "";
+				if (fromEl) fromEl.style.opacity = "";
+			}, 260);
+		} catch (e) {
+			/* 失败则保留兜底文案 */
+		}
+	}
+
+	// 滚动进入视口时淡入（首屏 hero 之后才看到，用滚动触发更自然）
+	function revealHitokoto() {
+		const el = document.querySelector(".hitokoto");
+		if (!el) return;
+		if ("IntersectionObserver" in window) {
+			const io = new IntersectionObserver(
+				(entries) => {
+					entries.forEach((e) => {
+						if (e.isIntersecting) {
+							el.classList.add("in-view");
+							io.disconnect();
+						}
+					});
+				},
+				{ threshold: 0.2 }
+			);
+			io.observe(el);
+		} else {
+			el.classList.add("in-view");
+		}
+	}
+
+	window.loadHitokoto = loadHitokoto;
+	window.revealHitokoto = revealHitokoto;
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", () => {
+			loadHitokoto();
+			revealHitokoto();
+		});
+	} else {
+		loadHitokoto();
+		revealHitokoto();
+	}
+</script>
