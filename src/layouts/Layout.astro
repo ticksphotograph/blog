@@ -632,6 +632,20 @@ const syncLayout = () => {
 syncLayout();
 window.addEventListener("scroll", syncNavBackground, { passive: true });
 
+// 首页刷新（整页加载）回到 hero 整屏顶部：
+// 浏览器默认会恢复刷新前的滚动位置，这里关闭该行为并强制回到顶部，
+// 让"刷新"始终回到整屏动画，而不是停在你之前滚动到的文章列表处。
+if (document.body.classList.contains("home-wide")) {
+	if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+	const toTop = () => {
+		window.scrollTo(0, 0);
+		syncNavBackground();
+	};
+	toTop();
+	// 兜底：若脚本早于浏览器恢复滚动的时机运行，load 后再置一次
+	if (document.readyState !== "complete") window.addEventListener("load", toTop);
+}
+
 if (window.swup) {
 	window.swup.hooks.on("page:view", syncLayout)
 } else {
